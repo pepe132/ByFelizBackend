@@ -40,11 +40,7 @@ const tieneRole=(...roles)=>{
 
         next();
     }
-
-    console.log();
-
     
-
 }
 
 module.exports={

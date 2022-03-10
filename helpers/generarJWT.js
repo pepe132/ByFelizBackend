@@ -1,4 +1,5 @@
 const jwt=require('jsonwebtoken')
+
 const generarJWT=(_id='')=>{
 
     return new Promise((resolve,reject)=>{
