@@ -1,5 +1,23 @@
 const {Schema,model}=require('mongoose');
 
+const reviewSchema=Schema({
+    name: { type: String, required: true },
+    rating: { type: Number, required: true },
+    comment: { type: String, required: true },
+    user: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Usuario',
+    },
+})
+
+const ImageSchema=Schema({
+    src:{type:String},
+    alt:{type:String},
+})
+
+
+
 const ProductoSchema=Schema({
     nombre:{
         type:String,
@@ -25,7 +43,22 @@ const ProductoSchema=Schema({
         required:true
     },
     descripcion:{type:String},
-    disponible:{type:Boolean,default:true}
+    disponible:{type:Boolean,default:true},
+    img:{type:String,default:null},
+    medidas:{type:String},
+    adicional:{type:String},
+    reviews:[reviewSchema],
+    rating: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
+    numReviews: {
+    type: Number,
+    required: true,
+    default: 0,
+    },
+    images:[ImageSchema]
 })
 
 ProductoSchema.methods.toJSON=function () {

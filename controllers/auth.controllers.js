@@ -2,6 +2,10 @@ const bcryptjs = require("bcryptjs");
 const { response } = require("express");
 const { generarJWT } = require("../helpers/generarJWT");
 const { googleVerify } = require("../helpers/google-verify");
+const nodemailer=require('nodemailer')
+const jwt=require('jsonwebtoken');
+require('dotenv').config();
+
 
 const Usuario=require('../models/usuario')
 
@@ -60,7 +64,7 @@ const login=async(req,res=response)=>{
 
 const revalidarToken = async (req, res = response ) => {
 
-    const { _id, nombre,correo } = req.usuario;
+    const { _id, nombre,correo,rol,google } = req.usuario;
 
     // Generar JWT
     const token = await generarJWT( _id, nombre );
@@ -71,6 +75,8 @@ const revalidarToken = async (req, res = response ) => {
         nombre,
         correo,
         token,
+        rol,
+        google
     })
 }
 
@@ -125,8 +131,96 @@ const googleSingIn=async(req,res=response)=>{
 
 }
 
+const olvidarContraseña=async(req,res=response)=>{
+        if (req.body.correo===''){
+            res.status(400).json({
+                msg:'El email es requerido'
+            })
+            
+        }
+
+        try {
+            const user=await Usuario.findOne({correo:req.body.correo})
+            if (!user) {
+                return res.status(403).json({
+                    msg:'No existe ese email'
+                })  
+            }
+
+            const token=jwt.sign({_id:user._id},'regret0ffall0wqu33n',{expiresIn:'1h'});
+            user.updateOne({
+                tokenResetPassword:token
+            })
+
+            const verificationLink=`http://localhost:3000/resetPassword/${user._id}/${token}`
+
+            const transporter=nodemailer.createTransport({
+                service:'gmail',
+                auth:{
+                    user:`${process.env.EMAIL_ADRESS}`,
+                    pass:`${process.env.EMAIL_PASSWORD}`
+                },
+                port: 587,
+            });
+
+            const mailOptions={
+                from:'byfeliz.asociacion@gmail.com',
+                to:`${user.correo}`,
+                
+                subject:'Enlace para recuperar su contraseña en ByFeliz',
+                text:`Link de activacion: ${verificationLink} `
+            
+            };
+
+            transporter.sendMail(mailOptions,(err,response)=>{
+                if (err){
+                    console.log('Ha ocurrido un error:',err);
+                }else{
+                    //console.log('Respuesta:',response);
+                    res.status(200).json('El email para recuperacion ha sido enviado')
+                }
+
+            })
+
+        
+        } catch (error) {
+            res.status(500).json({
+                msg:'Ha ocurrido un error',
+                error
+            })
+            console.log(error);
+            
+        }
+    }
+
+
+    const reestablecerContraseña=async(req,res=response)=>{
+
+        try {
+            req.body.password=await bcryptjs.hash(req.body.password,10)
+            const resetPassword=await Usuario.updateOne(
+                {"_id":req.params.id}, {$set:{"password":req.body.password}}
+            )
+
+            res.status(201).json({
+                resetPassword,
+                msg:'Contraseña cambiada con exito'
+            })
+            
+        } catch (error) {
+            res.status(500).json({
+                msg:'Este error',
+                error
+            })
+            
+        }
+    }
+
 module.exports={
     login,
     revalidarToken,
-    googleSingIn
+    googleSingIn,
+    olvidarContraseña,
+    reestablecerContraseña,
+    
 }

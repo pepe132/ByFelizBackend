@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const { check } = require('express-validator');
-const { obtenerProductos, obtenerProducto, crearProducto, actualizarProducto, borrarProducto, obtenerProductosMDF, obtenerProductosVinil } = require("../controllers/productos.controllers");
+const { obtenerProductos, obtenerProducto, crearProducto, actualizarProducto, borrarProducto, obtenerProductosMDF, obtenerProductosVinil, obtenerCajasPersonalizadas, actualizarProductoValoracion, reviewProducto } = require("../controllers/productos.controllers");
 const { existeProductoPorId, existeCategoriaPorId } = require("../helpers/db-validators");
 const { validarCampos } = require("../middlewares/validar-campos");
 const { validarJWT } = require("../middlewares/validar-JWT");
@@ -15,6 +15,9 @@ router.get('/todos-MDF',obtenerProductosMDF)
 
 //Obtener todas los productos de Vinilo
 router.get('/todos-vinil',obtenerProductosVinil)
+
+//Obtener todas los productos de cajas
+router.get('/todos-cajas',obtenerCajasPersonalizadas)
 
 //Obtener un producto por id
 
@@ -42,6 +45,15 @@ router.put('/actualizar-producto/:id',[
     check('id').custom(existeProductoPorId),
     validarCampos
 ],actualizarProducto)
+
+//REVIEW PRODUCTO
+
+router.post('/nueva_valoracion/:id',[
+    validarJWT,
+    //check('categoria','No es un id de mongo').isMongoId(),
+    check('id').custom(existeProductoPorId),
+    validarCampos
+],reviewProducto)
 
 //borrar una categoria-admin
 router.delete('/eliminar-producto/:id',[

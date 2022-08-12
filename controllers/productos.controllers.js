@@ -34,9 +34,40 @@ const crearProducto=async(req,res=response)=>{
 
 }
 
+const reviewProducto=async(req,res=response)=>{
+    const {id}=req.params
+    const { rating, comment } = req.body
+    const producto=await Producto.findById(id)
+
+    if (producto) {
+        const review = {
+            name: req.usuario.nombre,
+            rating: Number(rating),
+            comment,
+            user: req.usuario._id,
+        }
+
+        producto.reviews.push(review)
+
+        producto.numReviews = producto.reviews.length
+
+        producto.rating =
+        producto.reviews.reduce((acc, item) => item.rating + acc, 0) /
+        producto.reviews.length
+
+        const completo=await producto.save()
+        res.status(201).json({ok:true, message: 'Review added' ,completo})
+        
+    } else {
+        res.status(404).json({
+            msg:'producto no encontrado'
+        })
+    }
+}
+
 const obtenerProductos=async(req,res=response)=>{
     
-    const {limite=5,desde=0}=req.query
+    const {limite=5,pagina=1}=req.query
 
 
     const [total,productos]=await Promise.all([//promise.all es para ejecutar acciones de manera simultanea
@@ -44,9 +75,8 @@ const obtenerProductos=async(req,res=response)=>{
         Producto.find({estado:true})
             .populate('usuario','nombre')
             .populate('categoria','nombre')
-            .skip(Number(desde))
-            .limit(Number(limite))
-
+            .limit(Number(limite*1))
+            .skip((Number(pagina-1))*limite)
     ]);
     console.log(productos);
     
@@ -55,35 +85,51 @@ const obtenerProductos=async(req,res=response)=>{
 }
 
 const obtenerProductosMDF=async(req,res=response)=>{
-    const {limite=5,desde=0}=req.query
+    const {limite=8,pagina=1}=req.query
     const [total,productos]=await Promise.all([//promise.all es para ejecutar acciones de manera simultanea
         Producto.countDocuments({estado:true,categoria:'624cb6af3565e7cb1dc666c1'}),
-        Producto.find({estado:true})
+        Producto.find({estado:true,categoria:'624cb6af3565e7cb1dc666c1'})
             .populate('categoria','nombre')
-            .skip(Number(desde))
-            .limit(Number(limite))
+            .limit(Number(limite*1))
+            .skip((Number(pagina-1))*limite)
 
     ]);
-    const productoMDF=productos.filter(prod=>prod.categoria.nombre==='DISEÑOS MDF')
-    console.log(productoMDF);
     
-    res.json({ok:true,total,productoMDF})
+    res.json({ok:true,total,productos})
 
 }
 
 const obtenerProductosVinil=async(req,res=response)=>{
-    const {limite=5,desde=0}=req.query
+    const {limite=8,pagina=1}=req.query
+
     const [total,productos]=await Promise.all([//promise.all es para ejecutar acciones de manera simultanea
         Producto.countDocuments({estado:true,categoria:'62674c5af1a930bd5b71b847'}),
-        Producto.find({estado:true})
+        Producto.find({estado:true,categoria:'62674c5af1a930bd5b71b847'})
             .populate('categoria','nombre')
-            .skip(Number(desde))
-            .limit(Number(limite))
+            .limit(Number(limite*1))
+            .skip((Number(pagina-1))*limite)
 
     ]);
-    const productoVinil=productos.filter(prod=>prod.categoria.nombre==='DISEÑOS VINIL')
     
-    res.json({ok:true,total,productoVinil})
+    res.json({ok:true,total,productos})
+
+}
+
+const obtenerCajasPersonalizadas=async(req,res=response)=>{
+
+    const {limite=8,pagina=1}=req.query
+
+    const [total,productos]=await Promise.all([//promise.all es para ejecutar acciones de manera simultanea
+        Producto.countDocuments({estado:true,categoria:'6269be907b846abc305c18a2'}),
+        Producto.find({estado:true,categoria:'6269be907b846abc305c18a2'})
+            .populate('categoria','nombre')
+            .limit(Number(limite*1))
+            .skip((Number(pagina-1))*limite)
+
+    ]);
+    
+    
+    res.json({ok:true,total,productos})
 
 }
 
@@ -93,7 +139,7 @@ const obtenerProducto=async(req,res=response)=>{
     const {id}=req.params
     const producto=await Producto.findById(id)
 
-    res.json(producto)
+    res.json({ok:true,producto})
 
 }
 
@@ -133,5 +179,7 @@ module.exports={
     actualizarProducto,
     borrarProducto,
     obtenerProductosMDF,
-    obtenerProductosVinil
+    obtenerProductosVinil,
+    obtenerCajasPersonalizadas,
+    reviewProducto
 }
