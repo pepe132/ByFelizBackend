@@ -152,7 +152,7 @@ const olvidarContraseña=async(req,res=response)=>{
                 tokenResetPassword:token
             })
 
-            const verificationLink=`https://byfeliz.herokuapp.com/resetPassword/${user._id}/${token}`
+            const verificationLink=`https://byfeliz.netlify.app/resetPassword/${user._id}/${token}`
 
             const transporter=nodemailer.createTransport({
                 service:'gmail',
