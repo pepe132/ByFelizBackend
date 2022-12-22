@@ -21,7 +21,7 @@ const ImageSchema=Schema({
 const ProductoSchema=Schema({
     nombre:{
         type:String,
-        required:[true,'El nombre es obligatorio']
+        required:[true,'Name is required']
     },
     estado:{
         type:Boolean,
